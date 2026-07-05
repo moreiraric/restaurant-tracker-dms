@@ -1,0 +1,20 @@
+Chipotle,Mexican,Orlando,2,4.5,true,07/05/2026,Good quick lunch
+Olive Garden,Italian,Clermont,3,3.5,true,07/04/2026,Decent pasta
+Taco Bell,Mexican,Orlando,1,4.0,false,N/A,Cheap option
+Panda Express,Chinese,Winter Park,2,4.0,true,06/28/2026,Fast and reliable
+Sushi Pop,Japanese,Winter Park,4,4.8,false,N/A,Want to try later
+BurgerFi,American,Orlando,2,4.1,true,06/15/2026,Good burgers
+Domu,Japanese,Orlando,3,4.9,true,05/30/2026,Great ramen
+Shake Shack,American,Winter Park,2,4.2,true,05/18/2026,Good casual dinner
+Se7en Bites,American,Orlando,2,4.7,true,04/22/2026,Great breakfast food
+Hawkers,Asian,Orlando,3,4.6,true,04/10/2026,Good small plates
+Lazy Moon,Italian,Orlando,2,4.3,true,03/29/2026,Huge pizza slices
+Bento,Japanese,Orlando,2,4.0,true,03/18/2026,Good lunch option
+Agave Azul,Mexican,Winter Park,3,4.4,true,03/01/2026,Good tacos
+Thai Blossom,Thai,Winter Garden,3,4.5,false,N/A,Recommended by a friend
+The Ravenous Pig,American,Winter Park,4,4.6,false,N/A,Want to try for dinner
+Keke's Breakfast Cafe,American,Clermont,2,4.1,true,02/12/2026,Solid breakfast
+Pho 88,Vietnamese,Orlando,2,4.3,true,01/30/2026,Good pho
+Black Bean Deli,Cuban,Orlando,2,4.5,true,01/15/2026,Great Cuban sandwich
+Prato,Italian,Winter Park,4,4.7,false,N/A,Want to try later
+King Bao,Asian,Orlando,2,4.4,true,12/20/2025,Good bao and quick service
