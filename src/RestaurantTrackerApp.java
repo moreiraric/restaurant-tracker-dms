@@ -1,9 +1,7 @@
 
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.time.YearMonth;
 
 // This class controls the menu and user input for the restaurant tracker dms
 public class RestaurantTrackerApp {
@@ -196,7 +194,7 @@ public class RestaurantTrackerApp {
         String name = getRequiredString("Enter restaurant name: ");
         String cuisineType = getRequiredString("Enter cuisine type: ");
         String location = getRequiredString("Enter location: ");
-        int priceLevel = getValidInt("Enter price level from 1 to 5 (1 = $1-10 // 5 = $100+: ", 1, 5);
+        int priceLevel = getValidInt("Enter price level from 1 to 5 (1 = $1-10 // 5 = $100+): ", 1, 5);
         double userRating = getValidDouble("Enter user rating from 1 to 5: ", 1, 5);
         boolean visitedStatus = getValidBoolean("Have you visited this restaurant? Enter yes or no: ");
 
@@ -287,17 +285,34 @@ public class RestaurantTrackerApp {
     private String getValidDate(String prompt){
         String input = "";
         boolean validInput = false;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
         while (!validInput){
             System.out.print(prompt);
             input = scanner.nextLine().trim();
 
-            try {
-                LocalDate.parse(input, formatter);
-                validInput = true;
-            } catch (DateTimeParseException error) {
-                System.out.println("Invalid date. Please enter the date in MM/DD/YYYY format.");
+            if (!input.matches("\\d{2}/\\d{2}/\\d{4}")){
+                System.out.println("Invalid date format. Please enter the date as MM/DD/YYYY.");
+            } else {
+                String[] dateParts = input.split("/");
+
+                int month = Integer.parseInt(dateParts[0]);
+                int day = Integer.parseInt(dateParts[1]);
+                int year = Integer.parseInt(dateParts[2]);
+
+                if (month < 1 || month > 12){
+                    System.out.println("Invalid month. Please enter a month from 01 to 12.");
+                } else if (year < 1900 || year > 3000){
+                    System.out.println("Invalid year. Please enter a year from 1900 to 3000.");
+                } else {
+                    YearMonth yearMonth = YearMonth.of(year, month);
+                    int maxDay = yearMonth.lengthOfMonth();
+
+                    if (day < 1 || day > maxDay){
+                        System.out.println("Invalid day. Please enter a valid day for that month.");
+                    } else {
+                        validInput = true;
+                    }
+                }
             }
         }
 
