@@ -20,7 +20,7 @@ public class RestaurantDatabaseTest {
     // Tests that a missing text file returns an empty list
     @Test
     public void testLoadMissingFile(){
-        RestaurantDatabase database = new RestaurantDatabase("missing_file.txt");
+        RestaurantDatabase database = new RestaurantDatabase("restaurants_404.txt");
 
         ArrayList<Restaurant> restaurants = database.loadRestaurants();
 
