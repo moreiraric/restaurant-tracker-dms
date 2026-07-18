@@ -1,7 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -10,14 +14,22 @@ public class RestaurantTrackerGUI extends JFrame {
 
     private RestaurantManager manager;
     private JPanel cardPanel;
+    private RestaurantDatabase database;
 
-    public RestaurantTrackerGUI(){
+    public RestaurantTrackerGUI(Connection connection){
         manager = new RestaurantManager();
+        database = new RestaurantDatabase(connection);
 
         setTitle("Restaurant Tracker");
         setSize(1100, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                closeDatabaseConnection();
+            }
+        });
 
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(230, 230, 230));
@@ -25,9 +37,43 @@ public class RestaurantTrackerGUI extends JFrame {
         add(createTopPanel(), BorderLayout.NORTH);
         add(createCardScrollPane(), BorderLayout.CENTER);
 
-        refreshCards(manager.getAllRestaurants());
+        refreshDatabaseView();
 
         setVisible(true);
+    }
+
+    // Closes the MySQL connection before the application exits.
+    private void closeDatabaseConnection(){
+        try {
+            database.closeConnection();
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(this,
+                    "Database connection could not be closed: " + error.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Reloads the restaurant records stored in MySQL.
+    private boolean refreshDatabaseView(){
+        try {
+            ArrayList<Restaurant> restaurants = database.loadRestaurantsFromDatabase();
+            RestaurantManager refreshedManager = new RestaurantManager();
+
+            for (Restaurant restaurant : restaurants){
+                refreshedManager.addRestaurant(restaurant);
+            }
+
+            manager = refreshedManager;
+            refreshCards(manager.getAllRestaurants());
+            return true;
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(this,
+                    "Restaurants could not be loaded: " + error.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
 
     // Creates the top toolbar with regular buttons
@@ -47,7 +93,7 @@ public class RestaurantTrackerGUI extends JFrame {
         toolBar.setBorderPainted(false);
 
         JButton addButton = createMenuButton("Add Restaurant");
-        JButton loadButton = createMenuButton("Load File");
+        JButton refreshButton = createMenuButton("Refresh Database");
         JButton cardButton = createMenuButton("Card View");
         JButton listButton = createMenuButton("List View");
         JButton sortButton = createMenuButton("Sort by Rating");
@@ -56,10 +102,11 @@ public class RestaurantTrackerGUI extends JFrame {
         JButton reportButton = createMenuButton("Generate Report");
 
         toolBar.add(addButton);
-        toolBar.add(loadButton);
+        toolBar.add(refreshButton);
         toolBar.addSeparator();
         toolBar.add(cardButton);
         toolBar.add(listButton);
+        toolBar.addSeparator();
         toolBar.add(sortButton);
         toolBar.add(recentButton);
         toolBar.add(costButton);
@@ -69,7 +116,7 @@ public class RestaurantTrackerGUI extends JFrame {
         topPanel.add(toolBar, BorderLayout.CENTER);
 
         addButton.addActionListener(event -> showAddRestaurantDialog());
-        loadButton.addActionListener(event -> showLoadFileDialog());
+        refreshButton.addActionListener(event -> refreshDatabaseView());
         cardButton.addActionListener(event -> refreshCards(manager.getAllRestaurants()));
         listButton.addActionListener(event -> showListView());
         sortButton.addActionListener(event -> showSortedRestaurants());
@@ -91,12 +138,12 @@ public class RestaurantTrackerGUI extends JFrame {
     // Creates the scrollable card area
     private JScrollPane createCardScrollPane(){
         cardPanel = new JPanel();
-        cardPanel.setLayout(new GridLayout(0, 3, 25, 25));
+        cardPanel.setLayout(new GridLayout(0, 3, 16, 16));
         cardPanel.setBackground(Color.WHITE);
-        cardPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        cardPanel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         JScrollPane scrollPane = new JScrollPane(cardPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         return scrollPane;
@@ -105,7 +152,7 @@ public class RestaurantTrackerGUI extends JFrame {
     // Refreshes the restaurant cards on the screen
     private void refreshCards(ArrayList<Restaurant> restaurants){
         cardPanel.removeAll();
-        cardPanel.setLayout(new GridLayout(0, 3, 25, 25));
+        cardPanel.setLayout(new GridLayout(0, 3, 16, 16));
 
         if (restaurants.isEmpty()){
             JLabel emptyLabel = new JLabel("No restaurants to show.");
@@ -144,7 +191,7 @@ public class RestaurantTrackerGUI extends JFrame {
 
     // Creates one row for the list view
     private JPanel createRestaurantListItem(Restaurant restaurant){
-        JPanel row = new JPanel(new BorderLayout());
+        JPanel row = new JPanel(new BorderLayout(30, 0));
         row.setBackground(new Color(245, 245, 245));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
         row.setBorder(BorderFactory.createCompoundBorder(
@@ -262,13 +309,27 @@ public class RestaurantTrackerGUI extends JFrame {
         Restaurant restaurant = getRestaurantFromDialog(null);
 
         if (restaurant != null){
-            boolean added = manager.addRestaurant(restaurant);
+            if (!manager.isValidRestaurant(restaurant)){
+                JOptionPane.showMessageDialog(this,
+                        "Restaurant could not be added. Please check the input.");
+                return;
+            }
 
-            if (added){
-                refreshCards(manager.getAllRestaurants());
-                JOptionPane.showMessageDialog(this, "Restaurant added successfully!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Restaurant could not be added. Please check the input.");
+            try {
+                boolean added = database.addRestaurantToDatabase(restaurant);
+
+                if (added){
+                    manager.addRestaurant(restaurant);
+                    refreshCards(manager.getAllRestaurants());
+                    JOptionPane.showMessageDialog(this, "Restaurant added successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Restaurant could not be added.");
+                }
+            } catch (SQLException error) {
+                JOptionPane.showMessageDialog(this,
+                        "Restaurant could not be added: " + error.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -286,13 +347,30 @@ public class RestaurantTrackerGUI extends JFrame {
         Restaurant updatedRestaurant = getRestaurantFromDialog(restaurant);
 
         if (updatedRestaurant != null){
-            boolean updated = manager.updateRestaurant(index, updatedRestaurant);
+            updatedRestaurant.setRestaurantId(restaurant.getRestaurantId());
 
-            if (updated){
-                refreshCards(manager.getAllRestaurants());
-                JOptionPane.showMessageDialog(this, "Restaurant updated successfully!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Restaurant could not be updated.");
+            if (!manager.isValidRestaurant(updatedRestaurant)){
+                JOptionPane.showMessageDialog(this,
+                        "Restaurant could not be updated. Please check the input.");
+                return;
+            }
+
+            try {
+                boolean updated = database.updateRestaurantInDatabase(updatedRestaurant);
+
+                if (updated){
+                    manager.updateRestaurant(index, updatedRestaurant);
+                    refreshCards(manager.getAllRestaurants());
+                    JOptionPane.showMessageDialog(this, "Restaurant updated successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Restaurant could not be updated. It may no longer exist.");
+                }
+            } catch (SQLException error) {
+                JOptionPane.showMessageDialog(this,
+                        "Restaurant could not be updated: " + error.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -313,40 +391,25 @@ public class RestaurantTrackerGUI extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION){
-            boolean deleted = manager.deleteRestaurant(index);
+            try {
+                boolean deleted =
+                        database.deleteRestaurantFromDatabase(restaurant.getRestaurantId());
 
-            if (deleted){
-                refreshCards(manager.getAllRestaurants());
-                JOptionPane.showMessageDialog(this, "Restaurant deleted successfully!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Restaurant could not be deleted.");
+                if (deleted){
+                    manager.deleteRestaurant(index);
+                    refreshCards(manager.getAllRestaurants());
+                    JOptionPane.showMessageDialog(this, "Restaurant deleted successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Restaurant could not be deleted. It may no longer exist.");
+                }
+            } catch (SQLException error) {
+                JOptionPane.showMessageDialog(this,
+                        "Restaurant could not be deleted: " + error.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
-    }
-
-    // Shows dialog for loading restaurants from a text file
-    private void showLoadFileDialog(){
-        String fileName = JOptionPane.showInputDialog(this, "Enter the file name or file path:");
-
-        if (fileName == null || fileName.trim().isEmpty()){
-            return;
-        }
-
-        RestaurantDatabase database = new RestaurantDatabase(fileName.trim());
-        ArrayList<Restaurant> loadedRestaurants = database.loadRestaurants();
-
-        int loadedCount = 0;
-
-        for (Restaurant restaurant : loadedRestaurants){
-            boolean added = manager.addRestaurant(restaurant);
-
-            if (added){
-                loadedCount++;
-            }
-        }
-
-        refreshCards(manager.getAllRestaurants());
-        JOptionPane.showMessageDialog(this, loadedCount + " restaurant records loaded successfully!");
     }
 
     // Shows restaurants sorted by rating
@@ -393,8 +456,10 @@ public class RestaurantTrackerGUI extends JFrame {
 
     // Shows summary report
     private void showReportDialog(){
-        JOptionPane.showMessageDialog(this, manager.generateSummaryReport(),
-                "Restaurant Summary Report", JOptionPane.INFORMATION_MESSAGE);
+        if (refreshDatabaseView()){
+            JOptionPane.showMessageDialog(this, manager.generateSummaryReport(),
+                    "Restaurant Summary Report", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     // Gets restaurant data from a dialog form

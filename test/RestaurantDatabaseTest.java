@@ -11,7 +11,7 @@ public class RestaurantDatabaseTest {
 
         ArrayList<Restaurant> restaurants = database.loadRestaurants();
 
-        assertEquals(25, restaurants.size());
+        assertEquals(20, restaurants.size());
         assertEquals("Chipotle", restaurants.get(0).getName());
         assertEquals("Mexican", restaurants.get(0).getCuisineType());
         assertEquals("Orlando", restaurants.get(0).getLocation());

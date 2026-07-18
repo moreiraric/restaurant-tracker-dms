@@ -1,6 +1,7 @@
 // Restaurant class represents one restaurant record
 public class Restaurant {
     // Private attributes store data for the restaurant
+    private int restaurantId;
     private String name;
     private String cuisineType;
     private String location;
@@ -12,6 +13,15 @@ public class Restaurant {
 
     // Constructor creates restaurant object with all required data
     public Restaurant(String name, String cuisineType, String location, int priceLevel, double userRating, boolean visitedStates, String dateVisited, String notes) {
+        this(0, name, cuisineType, location, priceLevel, userRating,
+                visitedStates, dateVisited, notes);
+    }
+
+    // Constructor creates a restaurant object loaded from the database.
+    public Restaurant(int restaurantId, String name, String cuisineType, String location,
+                      int priceLevel, double userRating, boolean visitedStates,
+                      String dateVisited, String notes) {
+        this.restaurantId = restaurantId;
         this.name = name;
         this.cuisineType = cuisineType;
         this.location = location;
@@ -20,6 +30,16 @@ public class Restaurant {
         this.visitedStatus = visitedStates;
         this.dateVisited = dateVisited;
         this.notes = notes;
+    }
+
+    // Returns the restaurant's database ID.
+    public int getRestaurantId() {
+        return restaurantId;
+    }
+
+    // Updates the restaurant's database ID.
+    public void setRestaurantId(int restaurantId) {
+        this.restaurantId = restaurantId;
     }
 
     // Returns the restaurant name
@@ -122,4 +142,3 @@ public class Restaurant {
                 "\nNotes: " + notes;
     }
 }
-
