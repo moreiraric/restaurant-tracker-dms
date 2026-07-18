@@ -47,8 +47,6 @@ public class RestaurantTrackerGUI extends JFrame {
         toolBar.setBorderPainted(false);
 
         JButton addButton = createMenuButton("Add Restaurant");
-        JButton editButton = createMenuButton("Edit");
-        JButton deleteButton = createMenuButton("Delete");
         JButton loadButton = createMenuButton("Load File");
         JButton cardButton = createMenuButton("Card View");
         JButton listButton = createMenuButton("List View");
@@ -59,9 +57,6 @@ public class RestaurantTrackerGUI extends JFrame {
 
         toolBar.add(addButton);
         toolBar.add(loadButton);
-        toolBar.addSeparator();
-        toolBar.add(editButton);
-        toolBar.add(deleteButton);
         toolBar.addSeparator();
         toolBar.add(cardButton);
         toolBar.add(listButton);
@@ -74,8 +69,6 @@ public class RestaurantTrackerGUI extends JFrame {
         topPanel.add(toolBar, BorderLayout.CENTER);
 
         addButton.addActionListener(event -> showAddRestaurantDialog());
-        editButton.addActionListener(event -> showEditRestaurantDialog());
-        deleteButton.addActionListener(event -> showDeleteRestaurantDialog());
         loadButton.addActionListener(event -> showLoadFileDialog());
         cardButton.addActionListener(event -> refreshCards(manager.getAllRestaurants()));
         listButton.addActionListener(event -> showListView());
@@ -120,8 +113,7 @@ public class RestaurantTrackerGUI extends JFrame {
             cardPanel.add(emptyLabel);
         } else {
             for (Restaurant restaurant : restaurants){
-                int restaurantNumber = getRestaurantNumberForManager(restaurant);
-                cardPanel.add(createRestaurantCard(restaurant, restaurantNumber));
+                cardPanel.add(createRestaurantCard(restaurant));
             }
         }
 
@@ -141,8 +133,7 @@ public class RestaurantTrackerGUI extends JFrame {
             cardPanel.add(emptyLabel);
         } else {
             for (Restaurant restaurant : restaurants){
-                int restaurantNumber = getRestaurantNumberForManager(restaurant);
-                cardPanel.add(createRestaurantListItem(restaurant, restaurantNumber));
+                cardPanel.add(createRestaurantListItem(restaurant));
                 cardPanel.add(Box.createVerticalStrut(10));
             }
         }
@@ -151,20 +142,8 @@ public class RestaurantTrackerGUI extends JFrame {
         cardPanel.repaint();
     }
 
-    // Gets the restaurant number from the main restaurant list
-    private int getRestaurantNumberForManager(Restaurant restaurant){
-        ArrayList<Restaurant> allRestaurants = manager.getAllRestaurants();
-        int index = allRestaurants.indexOf(restaurant);
-
-        if (index == -1){
-            return 0;
-        }
-
-        return index + 1;
-    }
-
     // Creates one row for the list view
-    private JPanel createRestaurantListItem(Restaurant restaurant, int restaurantNumber){
+    private JPanel createRestaurantListItem(Restaurant restaurant){
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(new Color(245, 245, 245));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -173,7 +152,7 @@ public class RestaurantTrackerGUI extends JFrame {
                 BorderFactory.createEmptyBorder(12, 15, 12, 15)
         ));
 
-        JLabel nameLabel = new JLabel(restaurantNumber + ". " + restaurant.getName());
+        JLabel nameLabel = new JLabel(restaurant.getName());
         nameLabel.setFont(new Font("Inter", Font.BOLD, 18));
 
         JLabel detailsLabel = new JLabel(restaurant.getCuisineType() + " | "
@@ -182,14 +161,17 @@ public class RestaurantTrackerGUI extends JFrame {
                 + restaurant.getLocation());
         detailsLabel.setFont(new Font("Inter", Font.PLAIN, 14));
 
+        JButton menuButton = createContextButton(restaurant);
+
         row.add(nameLabel, BorderLayout.WEST);
-        row.add(detailsLabel, BorderLayout.EAST);
+        row.add(detailsLabel, BorderLayout.CENTER);
+        row.add(menuButton, BorderLayout.EAST);
 
         return row;
     }
 
     // Creates one visual card for a restaurant
-    private JPanel createRestaurantCard(Restaurant restaurant, int restaurantNumber){
+    private JPanel createRestaurantCard(Restaurant restaurant){
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(new Color(245, 245, 245));
@@ -198,9 +180,16 @@ public class RestaurantTrackerGUI extends JFrame {
                 BorderFactory.createEmptyBorder(25, 30, 25, 30)
         ));
 
-        JLabel nameLabel = new JLabel(restaurantNumber + ". " + restaurant.getName());
+        JLabel nameLabel = new JLabel(restaurant.getName());
         nameLabel.setFont(new Font("Inter", Font.BOLD, 24));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton menuButton = createContextButton(restaurant);
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        actionRow.setBackground(new Color(245, 245, 245));
+        actionRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        actionRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        actionRow.add(menuButton);
 
         card.add(nameLabel);
         card.add(Box.createVerticalStrut(20));
@@ -211,8 +200,29 @@ public class RestaurantTrackerGUI extends JFrame {
         card.add(createCardLine("Visited? ", restaurant.getVisitedStatus() ? "Yes" : "No"));
         card.add(createCardLine("Date Visited: ", restaurant.getDateVisited()));
         card.add(createCardLine("Notes: ", restaurant.getNotes()));
+        card.add(Box.createVerticalStrut(12));
+        card.add(actionRow);
 
         return card;
+    }
+
+    // Creates an edit and delete menu for one restaurant.
+    private JButton createContextButton(Restaurant restaurant){
+        JButton menuButton = new JButton("...");
+        JPopupMenu contextMenu = new JPopupMenu();
+        JMenuItem editItem = new JMenuItem("Edit");
+        JMenuItem deleteItem = new JMenuItem("Delete");
+
+        editItem.addActionListener(event -> editRestaurant(restaurant));
+        deleteItem.addActionListener(event -> deleteRestaurant(restaurant));
+
+        contextMenu.add(editItem);
+        contextMenu.add(deleteItem);
+
+        menuButton.addActionListener(event ->
+                contextMenu.show(menuButton, 0, menuButton.getHeight()));
+
+        return menuButton;
     }
 
     // Creates one line of text for a restaurant card
@@ -263,24 +273,17 @@ public class RestaurantTrackerGUI extends JFrame {
         }
     }
 
-    // Shows dialog for editing a restaurant
-    private void showEditRestaurantDialog(){
+    // Shows the edit dialog for the selected restaurant.
+    private void editRestaurant(Restaurant restaurant){
         ArrayList<Restaurant> restaurants = manager.getAllRestaurants();
+        int index = restaurants.indexOf(restaurant);
 
-        if (restaurants.isEmpty()){
-            JOptionPane.showMessageDialog(this, "There are no restaurants to edit.");
+        if (index == -1){
+            JOptionPane.showMessageDialog(this, "Restaurant could not be found.");
             return;
         }
 
-        int restaurantNumber = getRestaurantNumber("Enter the restaurant number to edit:");
-
-        if (restaurantNumber == -1){
-            return;
-        }
-
-        int index = restaurantNumber - 1;
-        Restaurant currentRestaurant = restaurants.get(index);
-        Restaurant updatedRestaurant = getRestaurantFromDialog(currentRestaurant);
+        Restaurant updatedRestaurant = getRestaurantFromDialog(restaurant);
 
         if (updatedRestaurant != null){
             boolean updated = manager.updateRestaurant(index, updatedRestaurant);
@@ -294,28 +297,23 @@ public class RestaurantTrackerGUI extends JFrame {
         }
     }
 
-    // Shows dialog for deleting a restaurant
-    private void showDeleteRestaurantDialog(){
+    // Deletes the selected restaurant after confirmation.
+    private void deleteRestaurant(Restaurant restaurant){
         ArrayList<Restaurant> restaurants = manager.getAllRestaurants();
+        int index = restaurants.indexOf(restaurant);
 
-        if (restaurants.isEmpty()){
-            JOptionPane.showMessageDialog(this, "There are no restaurants to delete.");
-            return;
-        }
-
-        int restaurantNumber = getRestaurantNumber("Enter the restaurant number to delete:");
-
-        if (restaurantNumber == -1){
+        if (index == -1){
+            JOptionPane.showMessageDialog(this, "Restaurant could not be found.");
             return;
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to delete restaurant #" + restaurantNumber + "?",
+                "Are you sure you want to delete " + restaurant.getName() + "?",
                 "Confirm Delete",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION){
-            boolean deleted = manager.deleteRestaurant(restaurantNumber - 1);
+            boolean deleted = manager.deleteRestaurant(index);
 
             if (deleted){
                 refreshCards(manager.getAllRestaurants());
@@ -323,30 +321,6 @@ public class RestaurantTrackerGUI extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(this, "Restaurant could not be deleted.");
             }
-        }
-    }
-
-    // Gets restaurant number from the user
-    private int getRestaurantNumber(String message){
-        String input = JOptionPane.showInputDialog(this, message);
-
-        if (input == null){
-            return -1;
-        }
-
-        try {
-            int restaurantNumber = Integer.parseInt(input);
-            int size = manager.getAllRestaurants().size();
-
-            if (restaurantNumber < 1 || restaurantNumber > size){
-                JOptionPane.showMessageDialog(this, "Please enter a number from 1 to " + size + ".");
-                return -1;
-            }
-
-            return restaurantNumber;
-        } catch (NumberFormatException error){
-            JOptionPane.showMessageDialog(this, "Please enter a valid whole number.");
-            return -1;
         }
     }
 
