@@ -3,8 +3,22 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-// Main class connects to MySQL and starts the Restaurant Tracker DMS program.
+/**
+ * Connects to MySQL and starts the Restaurant Tracker DMS program.
+ */
 public class Main {
+    /**
+     * Creates the main application object.
+     */
+    public Main() {
+    }
+
+    /**
+     * Starts the application and opens the graphical user interface after a
+     * successful database connection.
+     *
+     * @param args command-line arguments, which are not used
+     */
     public static void main(String[] args) {
         Connection connection = getDatabaseConnection();
 

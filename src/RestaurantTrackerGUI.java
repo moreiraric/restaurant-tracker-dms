@@ -9,13 +9,27 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-// GUI class for the Restaurant Tracker DMS
+/**
+ * Provides the graphical user interface for viewing and managing restaurants.
+ * The GUI uses a {@link RestaurantManager} for restaurant logic and a
+ * {@link RestaurantDatabase} for database operations.
+ */
 public class RestaurantTrackerGUI extends JFrame {
 
+    /** Manages the restaurant records displayed by the GUI. */
     private RestaurantManager manager;
+
+    /** Holds the restaurant cards shown in the main window. */
     private JPanel cardPanel;
+
+    /** Handles the GUI's MySQL database operations. */
     private RestaurantDatabase database;
 
+    /**
+     * Creates the restaurant tracker window and loads restaurants from the database.
+     *
+     * @param connection the active MySQL connection used by the application
+     */
     public RestaurantTrackerGUI(Connection connection){
         manager = new RestaurantManager();
         database = new RestaurantDatabase(connection);
@@ -25,6 +39,11 @@ public class RestaurantTrackerGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
+            /**
+             * Closes the database connection when the application window closes.
+             *
+             * @param event the window closing event
+             */
             @Override
             public void windowClosing(WindowEvent event) {
                 closeDatabaseConnection();

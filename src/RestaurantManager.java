@@ -2,18 +2,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-// RestaurantManager class handles the main logic for the Restaurant Tracker DMS.
+/**
+ * Handles restaurant validation, list changes, and summary report calculations.
+ */
 public class RestaurantManager {
 
     // ArrayList stores all restaurant records while the program is running.
     private ArrayList<Restaurant> restaurants;
 
-    // Constructor initializes an empty list of restaurants.
+    /**
+     * Creates a manager with an empty restaurant list.
+     */
     public RestaurantManager() {
         restaurants = new ArrayList<Restaurant>();
     }
 
-    // Checks whether a Restaurant object contains valid data before it is added or updated.
+    /**
+     * Checks whether a restaurant contains the required information and valid ranges.
+     *
+     * @param restaurant the restaurant to check
+     * @return true if the restaurant data is valid, or false otherwise
+     */
     public boolean isValidRestaurant(Restaurant restaurant) {
         if (restaurant == null) {
             return false;
@@ -47,7 +56,12 @@ public class RestaurantManager {
         return true;
     }
 
-    // Adds a restaurant to the list if the restaurant object is valid.
+    /**
+     * Adds a restaurant to the list if its information is valid.
+     *
+     * @param restaurant the restaurant to add
+     * @return true if the restaurant was added, or false if it was invalid
+     */
     public boolean addRestaurant(Restaurant restaurant) {
         if (!isValidRestaurant(restaurant)) {
             return false;
@@ -57,12 +71,22 @@ public class RestaurantManager {
         return true;
     }
 
-    // Returns the full list of restaurants.
+    /**
+     * Returns all restaurants currently stored by the manager.
+     *
+     * @return the list of restaurants
+     */
     public ArrayList<Restaurant> getAllRestaurants() {
         return restaurants;
     }
 
-    // Replaces an existing restaurant record with an updated restaurant object.
+    /**
+     * Replaces a restaurant at a selected list position with updated information.
+     *
+     * @param index the list position of the restaurant to update
+     * @param updatedRestaurant the restaurant containing the updated information
+     * @return true if the restaurant was updated, or false if the index or data was invalid
+     */
     public boolean updateRestaurant(int index, Restaurant updatedRestaurant) {
         if (index < 0 || index >= restaurants.size() || !isValidRestaurant(updatedRestaurant)) {
             return false;
@@ -72,7 +96,12 @@ public class RestaurantManager {
         return true;
     }
 
-    // Deletes a restaurant record based on its index in the list.
+    /**
+     * Deletes a restaurant using its position in the list.
+     *
+     * @param index the list position of the restaurant to delete
+     * @return true if the restaurant was deleted, or false if the index was invalid
+     */
     public boolean deleteRestaurant(int index) {
         if (index < 0 || index >= restaurants.size()) {
             return false;
@@ -82,7 +111,11 @@ public class RestaurantManager {
         return true;
     }
 
-    // Finds and returns the restaurant with the highest user rating.
+    /**
+     * Finds the restaurant with the highest user rating.
+     *
+     * @return the highest-rated restaurant, or null if the list is empty
+     */
     public Restaurant getHighestRatedRestaurant() {
         if (restaurants.isEmpty()) {
             return null;
@@ -99,7 +132,11 @@ public class RestaurantManager {
         return highestRated;
     }
 
-    // Finds and returns the cuisine type that appears most often in the list.
+    /**
+     * Finds the cuisine type that appears most often in the restaurant list.
+     *
+     * @return the most common cuisine, or a message if the list is empty
+     */
     public String getMostCommonCuisine() {
         if (restaurants.isEmpty()) {
             return "No restaurants available.";
@@ -132,7 +169,11 @@ public class RestaurantManager {
         return mostCommonCuisine;
     }
 
-    // Finds the best budget restaurant based on price level and rating.
+    /**
+     * Finds the highest-rated restaurant with a price level of 1 or 2.
+     *
+     * @return the best budget restaurant, or null if none is available
+     */
     public Restaurant getBestBudgetRestaurant() {
         if (restaurants.isEmpty()) {
             return null;
@@ -153,7 +194,11 @@ public class RestaurantManager {
         return bestBudgetRestaurant;
     }
 
-    // Generates a summary report using calculations from the restaurant list.
+    /**
+     * Generates a report containing totals, ratings, cuisine, and budget information.
+     *
+     * @return the formatted summary report, or a message if the list is empty
+     */
     public String generateSummaryReport() {
         if (restaurants.isEmpty()) {
             return "No restaurants available. Add restaurants before generating a report.";

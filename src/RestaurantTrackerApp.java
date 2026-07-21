@@ -3,7 +3,9 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.YearMonth;
 
-// This class controls the menu and user input for the restaurant tracker dms
+/**
+ * Controls the console menu and user input for the Restaurant Tracker DMS.
+ */
 public class RestaurantTrackerApp {
 
     // Scanner reads input from the user.
@@ -12,13 +14,19 @@ public class RestaurantTrackerApp {
     // RestaurantManager handles the main restaurant logic
     private RestaurantManager manager;
 
-    // Constructor creates the scanner and manager objects
+    /**
+     * Creates the scanner and restaurant manager used by the console application.
+     */
     public RestaurantTrackerApp(){
         scanner = new Scanner(System.in);
         manager = new RestaurantManager();
     }
 
-    // Starts the app and keeps the menu running until the user exits
+    /**
+     * Starts the console application and runs the menu until the user exits.
+     *
+     * @return true after the application finishes normally
+     */
     public boolean start(){
         boolean running = true;
 
@@ -48,7 +56,11 @@ public class RestaurantTrackerApp {
         return true;
     }
 
-    // Displays main menu and returns the user's choice
+    /**
+     * Displays the main menu and asks the user to select an option.
+     *
+     * @return the selected menu option from 1 to 7
+     */
     public int displayMenu() {
 
         System.out.println("\nMain Menu");
@@ -63,7 +75,11 @@ public class RestaurantTrackerApp {
         return getValidInt("Enter your choice: ", 1, 7);
     }
 
-    // Handles adding new restaurants
+    /**
+     * Collects restaurant information and attempts to add it to the list.
+     *
+     * @return true if the restaurant was added, or false otherwise
+     */
     public boolean handleAddRestaurant(){
         Restaurant restaurant = collectRestaurantData();
 
@@ -78,7 +94,11 @@ public class RestaurantTrackerApp {
         return added;
     }
 
-    // Displays all saved restaurants
+    /**
+     * Displays all restaurants currently stored in the application.
+     *
+     * @return the list of stored restaurants
+     */
     public ArrayList<Restaurant> handleViewRestaurant(){
         ArrayList<Restaurant> restaurants = manager.getAllRestaurants();
 
@@ -96,7 +116,11 @@ public class RestaurantTrackerApp {
         return restaurants;
     }
 
-    // Handles updating an existing restaurant
+    /**
+     * Asks the user to select and update an existing restaurant.
+     *
+     * @return true if the restaurant was updated, or false otherwise
+     */
     public boolean handleUpdateRestaurant(){
         ArrayList<Restaurant> restaurants = manager.getAllRestaurants();
 
@@ -124,7 +148,11 @@ public class RestaurantTrackerApp {
         return updated;
     }
 
-    // Handles deleting an existing restaurant
+    /**
+     * Asks the user to select and confirm the deletion of a restaurant.
+     *
+     * @return true if the restaurant was deleted, or false otherwise
+     */
     public boolean handleDeleteRestaurant(){
         ArrayList<Restaurant> restaurants = manager.getAllRestaurants();
 
@@ -156,14 +184,22 @@ public class RestaurantTrackerApp {
         return deleted;
     }
 
-    // Generates and displays the restaurant summary report
+    /**
+     * Generates and displays the restaurant summary report.
+     *
+     * @return the formatted summary report
+     */
     public String handleGenerateReport(){
         String report = manager.generateSummaryReport();
         System.out.println("\n" + report);
         return report;
     }
 
-    // Loads restaurant records from a text file
+    /**
+     * Loads valid restaurant records from a text file selected by the user.
+     *
+     * @return true if at least one restaurant was loaded, or false otherwise
+     */
     public boolean handleLoadFromFile(){
         String fileName = getRequiredString("Enter the file name or file path: ");
         RestaurantDatabase database = new RestaurantDatabase(fileName);
