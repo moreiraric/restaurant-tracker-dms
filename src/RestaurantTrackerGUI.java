@@ -532,8 +532,32 @@ public class RestaurantTrackerGUI extends JFrame {
         ratingPanel.add(fiveStarButton);
 
         JCheckBox visitedBox = new JCheckBox("Visited");
-        JTextField dateField = new JTextField();
+        SpinnerDateModel dateModel = new SpinnerDateModel(){
+            @Override
+            public Object getNextValue(){
+                return moveDateByOneDay(1);
+            }
+
+            @Override
+            public Object getPreviousValue(){
+                return moveDateByOneDay(-1);
+            }
+
+            private java.util.Date moveDateByOneDay(int amount){
+                setCalendarField(java.util.Calendar.DAY_OF_MONTH);
+                java.util.Calendar calendar = java.util.Calendar.getInstance();
+                calendar.setTime(getDate());
+                calendar.add(java.util.Calendar.DAY_OF_MONTH, amount);
+                return calendar.getTime();
+            }
+        };
+        JSpinner dateSpinner = new JSpinner(dateModel);
+        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "MM/dd/yyyy");
+        dateEditor.getFormat().setLenient(false);
+        dateSpinner.setEditor(dateEditor);
+        dateEditor.getTextField().setFocusLostBehavior(JFormattedTextField.PERSIST);
         JTextField notesField = new JTextField();
+        dateSpinner.setToolTipText("Enter a date as MM/DD/YYYY or use the arrow buttons.");
 
         if (existingRestaurant != null){
             nameField.setText(existingRestaurant.getName());
@@ -565,9 +589,21 @@ public class RestaurantTrackerGUI extends JFrame {
             }
 
             visitedBox.setSelected(existingRestaurant.getVisitedStatus());
-            dateField.setText(existingRestaurant.getDateVisited());
+
+            if (existingRestaurant.getVisitedStatus()){
+                String[] dateParts = existingRestaurant.getDateVisited().split("/");
+                int month = Integer.parseInt(dateParts[0]);
+                int day = Integer.parseInt(dateParts[1]);
+                int year = Integer.parseInt(dateParts[2]);
+                dateSpinner.setValue(java.sql.Date.valueOf(LocalDate.of(year, month, day)));
+            }
+
             notesField.setText(existingRestaurant.getNotes());
         }
+
+        dateSpinner.setEnabled(visitedBox.isSelected());
+        visitedBox.addActionListener(event ->
+                dateSpinner.setEnabled(visitedBox.isSelected()));
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
         panel.add(new JLabel("Restaurant Name:"));
@@ -583,7 +619,7 @@ public class RestaurantTrackerGUI extends JFrame {
         panel.add(new JLabel("Visited:"));
         panel.add(visitedBox);
         panel.add(new JLabel("Date Visited MM/DD/YYYY:"));
-        panel.add(dateField);
+        panel.add(dateSpinner);
         panel.add(new JLabel("Notes:"));
         panel.add(notesField);
 
@@ -606,8 +642,12 @@ public class RestaurantTrackerGUI extends JFrame {
             double userRating = getSelectedRating(oneStarButton, twoStarButton,
                     threeStarButton, fourStarButton, fiveStarButton);
             boolean visitedStatus = visitedBox.isSelected();
-            String dateVisited = dateField.getText().trim();
+            String dateVisited = dateEditor.getTextField().getText().trim();
             String notes = notesField.getText().trim();
+
+            if (!visitedStatus){
+                dateVisited = "N/A";
+            }
 
             if (name.isEmpty() || cuisineType.isEmpty() || location.isEmpty()){
                 JOptionPane.showMessageDialog(this, "Restaurant name, cuisine type, and location cannot be blank.");
